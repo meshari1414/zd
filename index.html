@@ -554,6 +554,42 @@
   .compare-net-val.neg { color: var(--red); }
   .compare-net-val.zero { color: var(--muted); }
 
+  /* ---- SMART INSIGHT ---- */
+  .insight-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.85rem 1.2rem;
+    margin-bottom: 1.5rem;
+    min-height: 52px;
+    transition: border-color .3s;
+    animation: fadeSlide .4s ease;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .insight-bar.good  { border-color: #00e67640; }
+  .insight-bar.warn  { border-color: #ffd60a40; }
+  .insight-bar.bad   { border-color: #ff4d6d40; }
+  .insight-bar.neutral { border-color: var(--border); }
+  .insight-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .insight-text {
+    font-size: 0.88rem;
+    color: #ffffff;
+    line-height: 1.5;
+  }
+  .insight-text strong { font-weight: 900; }
+  .insight-text .good-val  { color: var(--green); }
+  .insight-text .warn-val  { color: var(--yellow); }
+  .insight-text .bad-val   { color: var(--red); }
+
   /* ---- RESPONSIVE ---- */
   @media(max-width: 700px) {
     header { padding: 0 1rem; }
@@ -677,6 +713,11 @@
   <!-- CHART PANEL -->
   <div class="panel" id="panel-chart">
     <div class="chart-section">
+
+      <!-- Smart Insight -->
+      <div class="insight-bar neutral" id="insightBar">
+        <span class="insight-text" id="insightText">جارٍ تحليل البيانات...</span>
+      </div>
 
       <!-- Comparison Dashboard -->
       <div class="compare-grid" id="compareGrid">
@@ -829,6 +870,7 @@ onSnapshot(query(entriesCol, orderBy('date', 'desc')), snap => {
   updateSummary();
   renderTable();
   updateFilterDates();
+  updateInsight();
   if (document.getElementById('panel-chart').classList.contains('active')) buildComparison();
 });
 
@@ -1081,6 +1123,69 @@ function buildChart() {
   }
 }
 
+// ---- SMART INSIGHT ----
+function updateInsight() {
+  const now = new Date();
+  const toStr = d => d.toISOString().split('T')[0];
+  const todayStr = toStr(now);
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const yesterdayStr = toStr(yesterday);
+
+  const sum = (date, type) => entries.filter(e => e.date === date && e.type === type).reduce((s,e) => s + e.amount, 0);
+
+  const todayInc  = sum(todayStr, 'income');
+  const todayExp  = sum(todayStr, 'expense');
+  const yesterExp = sum(yesterdayStr, 'expense');
+  const yesterInc = sum(yesterdayStr, 'income');
+
+  const bar  = document.getElementById('insightBar');
+  const text = document.getElementById('insightText');
+
+  if (!entries.length) {
+    bar.className = 'insight-bar neutral';
+    text.innerHTML = 'لا توجد بيانات بعد — ابدأ بتسجيل أول حركة مالية!';
+    return;
+  }
+
+  let icon, cls, msg;
+
+  if (todayExp === 0 && todayInc === 0) {
+    icon = '📋'; cls = 'neutral';
+    msg = 'لم تُسجَّل أي حركة مالية اليوم بعد.';
+  } else if (yesterExp === 0 && todayExp > 0) {
+    icon = '📊'; cls = 'neutral';
+    msg = `أنفقت اليوم <strong><span class="bad-val">${todayExp.toLocaleString('en-US')} ر.س</span></strong> — لا توجد بيانات أمس للمقارنة.`;
+  } else if (todayExp > yesterExp) {
+    const pct = Math.round((todayExp - yesterExp) / yesterExp * 100);
+    icon = '⚠️'; cls = 'bad';
+    msg = `اليوم أنفقت <strong><span class="bad-val">أكثر من أمس بـ ${pct}%</span></strong> — المصروفات ارتفعت من ${yesterExp.toLocaleString('en-US')} إلى ${todayExp.toLocaleString('en-US')} ر.س.`;
+  } else if (todayExp < yesterExp && todayExp > 0) {
+    const pct = Math.round((yesterExp - todayExp) / yesterExp * 100);
+    icon = '✅'; cls = 'good';
+    msg = `رائع! أنفقت اليوم <strong><span class="good-val">أقل من أمس بـ ${pct}%</span></strong> — وفّرت ${(yesterExp - todayExp).toLocaleString('en-US')} ر.س.`;
+  } else if (todayExp === yesterExp) {
+    icon = '📌'; cls = 'neutral';
+    msg = `مصروفات اليوم مساوية لأمس تماماً — <strong>${todayExp.toLocaleString('en-US')} ر.س</strong>.`;
+  }
+
+  if (todayInc > 0 && todayExp === 0) {
+    icon = '🎯'; cls = 'good';
+    msg = `ممتاز! سجّلت اليوم دخلاً <strong><span class="good-val">${todayInc.toLocaleString('en-US')} ر.س</span></strong> بدون أي مصروفات.`;
+  }
+
+  if (todayInc > 0 && todayExp > 0) {
+    const net = todayInc - todayExp;
+    if (net > 0 && cls !== 'bad') {
+      msg += ` — صافي اليوم: <strong><span class="good-val">+${net.toLocaleString('en-US')} ر.س</span></strong> 💰`;
+    } else if (net < 0) {
+      msg += ` — صافي اليوم: <strong><span class="bad-val">${net.toLocaleString('en-US')} ر.س</span></strong>`;
+    }
+  }
+
+  bar.className = `insight-bar ${cls}`;
+  text.innerHTML = msg;
+}
+
 // ---- COMPARISON DASHBOARD ----
 function buildComparison() {
   const now = new Date();
@@ -1130,7 +1235,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
   event.target.classList.add('active');
-  if (name === 'chart') { buildComparison(); }
+  if (name === 'chart') { buildComparison(); updateInsight(); }
   if (name === 'records') { updateFilterDates(); renderTable(); }
 }
 window.switchTab = switchTab;
