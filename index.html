@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>تموينات — إدارة مالية</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --card: #1a2235;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --green: #00e676;
+    --red: #ff4d6d;
+    --yellow: #ffd60a;
+    --text: #ffffff;
+    --muted: #6b7fa3;
+    --grad1: linear-gradient(135deg, #00d4ff22, #7c3aed22);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- HEADER ---- */
+  header {
+    background: linear-gradient(90deg, #0a0e1a, #111827);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    font-weight: 800;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon img {
+    width: 34px; height: 34px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 6px #00d4ff55);
+  }
+  .logo span { color: var(--accent); }
+
+  .today-badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  /* ---- MAIN ---- */
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* ---- TABS ---- */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 2rem;
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    width: fit-content;
+  }
+  .tab {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #ffffff;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .25s;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    color: #fff;
+    box-shadow: 0 4px 15px #00d4ff33;
+  }
+
+  /* ---- SUMMARY CARDS ---- */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .sum-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s;
+  }
+  .sum-card:hover { transform: translateY(-3px); }
+  .sum-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+  }
+  .sum-card.income::before { background: linear-gradient(90deg, var(--green), #00b248); }
+  .sum-card.expense::before { background: linear-gradient(90deg, var(--red), #c9184a); }
+  .sum-card.profit::before { background: linear-gradient(90deg, var(--accent), #7c3aed); }
+
+  .sum-label {
+    font-size: 0.85rem;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sum-amount {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+  }
+  .sum-card.income .sum-amount { color: #ffffff; }
+  .sum-card.expense .sum-amount { color: #ffffff; }
+  .sum-card.profit .sum-amount { color: #ffffff; }
+  .sum-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .glow-circle { display: none; }
+
+  /* ---- PANEL ---- */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ---- ADD FORM ---- */
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .form-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 0.82rem; color: #ffffff; font-weight: 600; }
+  .form-group input, .form-group select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color .2s;
+    width: 100%;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px #00d4ff15;
+  }
+  .form-group select option { background: var(--surface); }
+  .type-toggle {
+    display: flex; gap: 8px;
+  }
+  .type-btn {
+    flex: 1; padding: 11px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .type-btn.income.active { background: #00e67618; border-color: var(--green); color: var(--green); }
+  .type-btn.expense.active { background: #ff4d6d18; border-color: var(--red); color: var(--red); }
+
+  .add-btn {
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    border: none;
+    border-radius: 12px;
+    padding: 13px 32px;
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s, transform .2s;
+    box-shadow: 0 4px 20px #00d4ff30;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  .add-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* ---- TABLE ---- */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-title { font-size: 1rem; font-weight: 700; }
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--surface);
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-align: right;
+  }
+  td {
+    padding: 13px 16px;
+    font-size: 0.92rem;
+    border-bottom: 1px solid #1e2d4540;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #ffffff05; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .badge.income { background: #00e67618; color: var(--green); }
+  .badge.expense { background: #ff4d6d18; color: var(--red); }
+
+  .amount-pos { color: var(--green); font-weight: 700; }
+  .amount-neg { color: var(--red); font-weight: 700; }
+
+  .del-btn, .edit-btn {
+    background: none; border: none;
+    color: var(--muted); cursor: pointer;
+    padding: 4px 8px; border-radius: 6px;
+    transition: color .2s, background .2s;
+    font-size: 1rem;
+  }
+  .del-btn:hover { color: var(--red); background: #ff4d6d15; }
+  .edit-btn:hover { color: var(--accent); background: #00d4ff15; }
+
+  /* ---- ENTRY CARDS ---- */
+  .cards-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.9rem;
+    padding: 1.2rem 1.5rem;
+  }
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .entry-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px #00000030; }
+  .entry-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+  }
+  .entry-card-date {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .entry-card-actions { display: flex; gap: 2px; }
+  .entry-card-actions .edit-btn,
+  .entry-card-actions .del-btn {
+    font-size: 0.75rem;
+    padding: 3px 7px;
+  }
+  .entry-card-body {
+    padding: 0.85rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .entry-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .entry-card-row-label {
+    font-size: 0.78rem;
+    color: #ffffff;
+  }
+  .entry-card-row-val {
+    font-size: 0.92rem;
+    font-weight: 800;
+  }
+  .entry-card-divider {
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ---- MODAL ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: #00000080;
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 20px 60px #00000060;
+  }
+  .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 1.2rem; }
+  .modal-save {
+    flex: 1;
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    border: none; border-radius: 10px; padding: 11px;
+    color: #fff; font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  }
+  .modal-cancel {
+    flex: 1;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px;
+    color: var(--muted); font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+  /* ---- CHART ---- */
+  .chart-section { display: flex; flex-direction: column; gap: 1.2rem; }
+
+  .chart-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .kpi-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.1rem 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: transform .2s;
+  }
+  .kpi-box:hover { transform: translateY(-2px); }
+  .kpi-icon { display: none; }
+  .kpi-info { flex: 1; min-width: 0; }
+  .kpi-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 3px; }
+  .kpi-val { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi-box.kpi-income .kpi-val { color: #ffffff; }
+  .kpi-box.kpi-expense .kpi-val { color: #ffffff; }
+  .kpi-box.kpi-profit .kpi-val { color: #ffffff; }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.5rem;
+  }
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .chart-title { font-size: 1rem; font-weight: 700; }
+  .chart-type-btns { display: flex; gap: 6px; }
+  .ct-btn {
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .ct-btn.active { background: linear-gradient(135deg, var(--accent), #7c3aed); color: #fff; border-color: transparent; }
+
+  .chart-wrap { height: 280px; position: relative; }
+
+  .donut-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    align-items: center;
+  }
+  .donut-canvas-wrap { height: 220px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .legend-text { font-size: 0.85rem; color: var(--muted); }
+  .legend-pct { font-size: 1rem; font-weight: 800; margin-right: auto; }
+
+  /* ---- COMPARISON DASHBOARD ---- */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+  }
+  .compare-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.4rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s;
+  }
+  .compare-card:hover { transform: translateY(-3px); }
+  .compare-period {
+    font-size: 0.82rem;
+    color: #ffffff;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .compare-period-icon {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    background: var(--surface);
+  }
+  .compare-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 1.1rem;
+  }
+  .compare-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .compare-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+  }
+  .compare-item-label { color: #ffffff; }
+  .compare-item-val { font-weight: 800; font-size: 0.9rem; }
+  .compare-item-val.inc { color: var(--green); }
+  .compare-item-val.exp { color: var(--red); }
+  .compare-bar-bg {
+    height: 7px;
+    background: var(--surface);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .compare-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width .6s ease;
+    min-width: 4px;
+  }
+  .compare-bar-fill.inc { background: linear-gradient(90deg, var(--green), #00b248); }
+  .compare-bar-fill.exp { background: linear-gradient(90deg, var(--red), #c9184a); }
+  .compare-divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 1rem;
+  }
+  .compare-net {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+  }
+  .compare-net-label { color: #ffffff; }
+  .compare-net-val { font-weight: 900; font-size: 1rem; }
+  .compare-net-val.pos { color: var(--green); }
+  .compare-net-val.neg { color: var(--red); }
+  .compare-net-val.zero { color: var(--muted); }
+
+  /* ---- RESPONSIVE ---- */
+  @media(max-width: 700px) {
+    header { padding: 0 1rem; }
+    .logo { font-size: 1.1rem; }
+    .today-badge { font-size: 0.75rem; padding: 5px 10px; }
+    main { padding: 1rem 0.8rem; }
+    .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .sum-card { padding: 0.8rem 0.6rem; }
+    .sum-amount { font-size: 1.1rem; }
+    .sum-label { font-size: 0.72rem; }
+    .sum-sub { font-size: 0.68rem; }
+    .tabs { width: 100%; }
+    .tab { padding: 9px 14px; font-size: 0.85rem; flex: 1; text-align: center; }
+    .form-card { padding: 1.2rem; }
+    .form-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+    .form-grid .form-group[style*="span 2"] { grid-column: span 1; }
+    .add-btn { font-size: 0.95rem; padding: 12px; }
+    table { font-size: 0.8rem; }
+    th, td { padding: 10px 8px; }
+    .badge { font-size: 0.7rem; padding: 3px 8px; }
+    .chart-wrap { height: 220px; }
+    .chart-kpi-row { grid-template-columns: repeat(3,1fr); gap: 0.5rem; }
+    .kpi-box { padding: 0.7rem 0.6rem; gap: 8px; }
+    .kpi-icon { width: 34px; height: 34px; font-size: 1rem; border-radius: 9px; }
+    .kpi-val { font-size: 0.9rem; }
+    .kpi-label { font-size: 0.68rem; }
+    .donut-wrap { grid-template-columns: 1fr; }
+    .donut-canvas-wrap { height: 180px; }
+    .compare-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon"><img src="img/zd.png" alt="ZD" id="logoImg"/></div>
+  </div>
+  <div class="today-badge" id="todayDate"></div>
+</header>
+
+<main>
+
+  <!-- SUMMARY -->
+  <div class="summary-grid">
+    <div class="sum-card income">
+      <div class="glow-circle"></div>
+      <div class="sum-label">إجمالي الدخل</div>
+      <div class="sum-amount" id="totalIncome">0</div>
+    </div>
+    <div class="sum-card expense">
+      <div class="glow-circle"></div>
+      <div class="sum-label">إجمالي المصروفات</div>
+      <div class="sum-amount" id="totalExpense">0</div>
+    </div>
+    <div class="sum-card profit">
+      <div class="glow-circle"></div>
+      <div class="sum-label">صافي الربح</div>
+      <div class="sum-amount" id="totalProfit">0</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('add')">إضافة</button>
+    <button class="tab" onclick="switchTab('records')">السجل</button>
+    <button class="tab" onclick="switchTab('chart')">الإحصائيات</button>
+  </div>
+
+  <!-- ADD PANEL -->
+  <div class="panel active" id="panel-add">
+    <div class="form-card">
+      <div class="form-title">تسجيل حركة مالية</div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>النوع</label>
+          <div class="type-toggle">
+            <button class="type-btn income active" id="btn-income" onclick="setType('income')">الدخل</button>
+            <button class="type-btn expense" id="btn-expense" onclick="setType('expense')">المصروفات</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>المبلغ</label>
+          <input type="number" id="amountInput" placeholder="مثال: 500" min="0"/>
+        </div>
+        <div class="form-group">
+          <label>التصنيف</label>
+          <select id="catInput"></select>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group" style="grid-column: span 2;">
+          <label>الوصف (اختياري)</label>
+          <input type="text" id="descInput" placeholder="مثال: بضاعة شيبسي، مشتريات الصباح..."/>
+        </div>
+        <div class="form-group">
+          <label>التاريخ</label>
+          <input type="date" id="dateInput"/>
+        </div>
+      </div>
+
+      <button class="add-btn" onclick="addEntry()">إضافة إلى السجل</button>
+    </div>
+  </div>
+
+  <!-- RECORDS PANEL -->
+  <div class="panel" id="panel-records">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <div style="font-size:1rem;font-weight:700;">سجل الحركات</div>
+      <select class="filter-select" id="filterDate" onchange="renderTable()">
+        <option value="all">كل الأيام</option>
+      </select>
+    </div>
+    <div id="tableWrap">
+      <div class="empty-state"><div class="icon"></div>لا توجد بيانات بعد</div>
+    </div>
+  </div>
+
+  <!-- CHART PANEL -->
+  <div class="panel" id="panel-chart">
+    <div class="chart-section">
+
+      <!-- Comparison Dashboard -->
+      <div class="compare-grid" id="compareGrid">
+        <div class="compare-card">
+          <div class="compare-period">أمس</div>
+          <div class="compare-row">
+            <div class="compare-item">
+              <div class="compare-item-header">
+                <span class="compare-item-label">الدخل</span>
+                <span class="compare-item-val inc" id="cmp-yest-inc">0 ر.س</span>
+              </div>
+              <div class="compare-bar-bg"><div class="compare-bar-fill inc" id="cmp-yest-inc-bar" style="width:0%"></div></div>
+            </div>
+            <div class="compare-item">
+              <div class="compare-item-header">
+                <span class="compare-item-label">المصروفات</span>
+                <span class="compare-item-val exp" id="cmp-yest-exp">0 ر.س</span>
+              </div>
+              <div class="compare-bar-bg"><div class="compare-bar-fill exp" id="cmp-yest-exp-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="compare-divider"></div>
+          <div class="compare-net">
+            <span class="compare-net-label">صافي</span>
+            <span class="compare-net-val" id="cmp-yest-net">0 ر.س</span>
+          </div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-period">هذا الأسبوع</div>
+          <div class="compare-row">
+            <div class="compare-item">
+              <div class="compare-item-header">
+                <span class="compare-item-label">الدخل</span>
+                <span class="compare-item-val inc" id="cmp-week-inc">0 ر.س</span>
+              </div>
+              <div class="compare-bar-bg"><div class="compare-bar-fill inc" id="cmp-week-inc-bar" style="width:0%"></div></div>
+            </div>
+            <div class="compare-item">
+              <div class="compare-item-header">
+                <span class="compare-item-label">المصروفات</span>
+                <span class="compare-item-val exp" id="cmp-week-exp">0 ر.س</span>
+              </div>
+              <div class="compare-bar-bg"><div class="compare-bar-fill exp" id="cmp-week-exp-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="compare-divider"></div>
+          <div class="compare-net">
+            <span class="compare-net-label">صافي</span>
+            <span class="compare-net-val" id="cmp-week-net">0 ر.س</span>
+          </div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-period">هذا الشهر</div>
+          <div class="compare-row">
+            <div class="compare-item">
+              <div class="compare-item-header">
+                <span class="compare-item-label">الدخل</span>
+                <span class="compare-item-val inc" id="cmp-month-inc">0 ر.س</span>
+              </div>
+              <div class="compare-bar-bg"><div class="compare-bar-fill inc" id="cmp-month-inc-bar" style="width:0%"></div></div>
+            </div>
+            <div class="compare-item">
+              <div class="compare-item-header">
+                <span class="compare-item-label">المصروفات</span>
+                <span class="compare-item-val exp" id="cmp-month-exp">0 ر.س</span>
+              </div>
+              <div class="compare-bar-bg"><div class="compare-bar-fill exp" id="cmp-month-exp-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="compare-divider"></div>
+          <div class="compare-net">
+            <span class="compare-net-label">صافي</span>
+            <span class="compare-net-val" id="cmp-month-net">0 ر.س</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">تعديل الحركة</div>
+    <input type="hidden" id="editId"/>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-bottom:1rem;">
+      <div class="form-group">
+        <label>النوع</label>
+        <div class="type-toggle">
+          <button class="type-btn income" id="edit-btn-income" onclick="setEditType('income')">دخل</button>
+          <button class="type-btn expense" id="edit-btn-expense" onclick="setEditType('expense')">مصروف</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>المبلغ (ر.س)</label>
+        <input type="number" id="editAmount" min="0"/>
+      </div>
+      <div class="form-group">
+        <label>التصنيف</label>
+        <select id="editCat"></select>
+      </div>
+      <div class="form-group">
+        <label>التاريخ</label>
+        <input type="date" id="editDate"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>الوصف</label>
+      <input type="text" id="editDesc"/>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEdit()">إلغاء</button>
+      <button class="modal-save" onclick="saveEdit()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAlojOcGBX0GdzIYtK7CMkWIPXFOQzxu-Q",
+  authDomain: "zd2-finance.firebaseapp.com",
+  projectId: "zd2-finance",
+  storageBucket: "zd2-finance.firebasestorage.app",
+  messagingSenderId: "182310499307",
+  appId: "1:182310499307:web:61ab9f2f24229b5220dfae"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const entriesCol = collection(db, 'entries');
+
+// ---- DATA ----
+let entries = [];
+let currentType = 'income';
+let chartInstance = null;
+
+const CATS = {
+  income: ['المبيعات','إيرادات أخرى'],
+  expense: ['مشتريات','رواتب','إيجار','كهرباء','أخرى']
+};
+
+// ---- REALTIME LISTENER ----
+onSnapshot(query(entriesCol, orderBy('date', 'desc')), snap => {
+  entries = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+  updateSummary();
+  renderTable();
+  updateFilterDates();
+  if (document.getElementById('panel-chart').classList.contains('active')) buildComparison();
+});
+
+// ---- INIT ----
+function init() {
+  const now = new Date();
+  document.getElementById('todayDate').textContent =
+    now.toLocaleDateString('ar-SA', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  document.getElementById('dateInput').value = now.toISOString().split('T')[0];
+  updateCats();
+}
+
+function setType(t) {
+  currentType = t;
+  document.getElementById('btn-income').classList.toggle('active', t === 'income');
+  document.getElementById('btn-expense').classList.toggle('active', t === 'expense');
+  updateCats();
+}
+window.setType = setType;
+
+function updateCats() {
+  const sel = document.getElementById('catInput');
+  sel.innerHTML = CATS[currentType].map(c => `<option>${c}</option>`).join('');
+}
+
+// ---- ADD ----
+async function addEntry() {
+  const amount = parseFloat(document.getElementById('amountInput').value);
+  const cat = document.getElementById('catInput').value;
+  const desc = document.getElementById('descInput').value.trim();
+  const date = document.getElementById('dateInput').value;
+
+  if (!amount || amount <= 0) { alert('يرجى إدخال مبلغ صحيح'); return; }
+  if (!date) { alert('يرجى اختيار التاريخ'); return; }
+
+  await addDoc(entriesCol, { type: currentType, amount, cat, desc, date, createdAt: Date.now() });
+  document.getElementById('amountInput').value = '';
+  document.getElementById('descInput').value = '';
+}
+window.addEntry = addEntry;
+
+// ---- SUMMARY ----
+function updateSummary() {
+  const income = entries.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0);
+  const expense = entries.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
+  const profit = income - expense;
+
+  document.getElementById('totalIncome').innerHTML = fmt(income);
+  document.getElementById('totalExpense').innerHTML = fmt(expense);
+  const el = document.getElementById('totalProfit');
+  el.innerHTML = (profit < 0 ? '- ' : '') + fmt(Math.abs(profit));
+  el.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+// ---- TABLE ----
+function renderTable() {
+  const filterVal = document.getElementById('filterDate')?.value || 'all';
+  let data = filterVal === 'all' ? entries : entries.filter(e => e.date === filterVal);
+
+  const wrap = document.getElementById('tableWrap');
+  if (!data.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="icon"></div>لا توجد بيانات</div>';
+    return;
+  }
+
+  // Group by date
+  const grouped = {};
+  data.forEach(e => { if (!grouped[e.date]) grouped[e.date] = []; grouped[e.date].push(e); });
+  const sortedDates = Object.keys(grouped).sort().reverse();
+
+  wrap.innerHTML = `
+    <div class="cards-wrap">
+      ${sortedDates.map(date => {
+        const dayEntries = grouped[date];
+        const income  = dayEntries.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0);
+        const expense = dayEntries.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
+        const net = income - expense;
+        const docIds = dayEntries.map(e => e._docId);
+        return `
+          <div class="entry-card">
+            <div class="entry-card-header">
+              <div class="entry-card-date">${date}</div>
+              <div class="entry-card-actions">
+                ${docIds.length === 1 ? `<button class="edit-btn" onclick="openEdit('${docIds[0]}')">تعديل</button>` : ''}
+                <button class="del-btn" onclick="${docIds.map(id => `deleteEntry('${id}')`).join(';')}">حذف</button>
+              </div>
+            </div>
+            <div class="entry-card-body">
+              <div class="entry-card-row">
+                <span class="entry-card-row-label">الدخل</span>
+                <span class="entry-card-row-val amount-pos">+${income.toLocaleString('en-US')}</span>
+              </div>
+              <div class="entry-card-row">
+                <span class="entry-card-row-label">المصروفات</span>
+                <span class="entry-card-row-val amount-neg">-${expense.toLocaleString('en-US')}</span>
+              </div>
+              <div class="entry-card-divider"></div>
+              <div class="entry-card-row">
+                <span class="entry-card-row-label">صافي</span>
+                <span class="entry-card-row-val" style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">${net >= 0 ? '+' : ''}${net.toLocaleString('en-US')}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function deleteEntry(docId) {
+  await deleteDoc(doc(db, 'entries', docId));
+}
+window.deleteEntry = deleteEntry;
+
+// ---- FILTER DATES ----
+function updateFilterDates() {
+  const sel = document.getElementById('filterDate');
+  const cur = sel.value;
+  const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
+  sel.innerHTML = `<option value="all">كل الأيام</option>` +
+    dates.map(d => `<option value="${d}" ${d === cur ? 'selected' : ''}>${d}</option>`).join('');
+}
+window.updateFilterDates = updateFilterDates;
+window.renderTable = renderTable;
+
+// ---- CHART ----
+let currentChartType = 'bar';
+let donutInstance = null;
+
+function switchChart(type) {
+  currentChartType = type;
+  document.getElementById('btnBar').classList.toggle('active', type === 'bar');
+  document.getElementById('btnLine').classList.toggle('active', type === 'line');
+  buildChart();
+}
+window.switchChart = switchChart;
+
+function buildChart() {
+  // Bar / Line chart
+  const dates = [...new Set(entries.map(e => e.date))].sort();
+  const incomeData = dates.map(d => entries.filter(e => e.date === d && e.type === 'income').reduce((s,e) => s + e.amount, 0));
+  const expenseData = dates.map(d => entries.filter(e => e.date === d && e.type === 'expense').reduce((s,e) => s + e.amount, 0));
+
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const isLine = currentChartType === 'line';
+  chartInstance = new Chart(ctx, {
+    type: currentChartType,
+    data: {
+      labels: dates,
+      datasets: [
+        {
+          label: 'دخل',
+          data: incomeData,
+          backgroundColor: isLine ? '#00e67615' : '#00e67628',
+          borderColor: '#00e676',
+          borderWidth: 2,
+          borderRadius: isLine ? 0 : 10,
+          fill: isLine,
+          tension: 0.4,
+          pointBackgroundColor: '#00e676',
+          pointRadius: isLine ? 5 : 0,
+        },
+        {
+          label: 'مصروف',
+          data: expenseData,
+          backgroundColor: isLine ? '#ff4d6d15' : '#ff4d6d28',
+          borderColor: '#ff4d6d',
+          borderWidth: 2,
+          borderRadius: isLine ? 0 : 10,
+          fill: isLine,
+          tension: 0.4,
+          pointBackgroundColor: '#ff4d6d',
+          pointRadius: isLine ? 5 : 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#e8f0fe', font: { family: 'Tajawal', size: 13 }, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1a2235',
+          borderColor: '#1e2d45',
+          borderWidth: 1,
+          titleFont: { family: 'Tajawal', size: 13 },
+          bodyFont: { family: 'Tajawal', size: 12 },
+          padding: 12,
+          callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('ar-SA') + ' ر.س' }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#6b7fa3', font: { family: 'Tajawal' } }, grid: { color: '#1e2d4530' } },
+        y: { ticks: { color: '#6b7fa3', font: { family: 'Tajawal' } }, grid: { color: '#1e2d4530' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // Donut chart by category
+  const cats = {};
+  entries.forEach(e => { cats[e.cat] = (cats[e.cat] || 0) + e.amount; });
+  const catLabels = Object.keys(cats);
+  const catVals = Object.values(cats);
+  const total = catVals.reduce((a,b) => a+b, 0);
+  const palette = ['#00d4ff','#00e676','#ff4d6d','#ffd60a','#7c3aed','#f97316','#06b6d4','#a855f7'];
+
+  const dCtx = document.getElementById('donutChart').getContext('2d');
+  if (donutInstance) donutInstance.destroy();
+
+  if (catLabels.length === 0) {
+    document.getElementById('donutLegend').innerHTML = '<div style="color:var(--muted);font-size:.85rem">لا توجد بيانات</div>';
+  } else {
+    donutInstance = new Chart(dCtx, {
+      type: 'doughnut',
+      data: {
+        labels: catLabels,
+        datasets: [{
+          data: catVals,
+          backgroundColor: palette.map(c => c + '33'),
+          borderColor: palette,
+          borderWidth: 2,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a2235',
+            borderColor: '#1e2d45',
+            borderWidth: 1,
+            titleFont: { family: 'Tajawal' },
+            bodyFont: { family: 'Tajawal' },
+            callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed.toLocaleString('ar-SA') + ' ر.س' }
+          }
+        }
+      }
+    });
+
+    document.getElementById('donutLegend').innerHTML = catLabels.map((l,i) => `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${palette[i % palette.length]}"></div>
+        <div class="legend-text">${l}</div>
+        <div class="legend-pct" style="color:${palette[i % palette.length]}">${Math.round(catVals[i]/total*100)}%</div>
+      </div>
+    `).join('');
+  }
+}
+
+// ---- COMPARISON DASHBOARD ----
+function buildComparison() {
+  const now = new Date();
+  const toStr = d => d.toISOString().split('T')[0];
+
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const yestStr = toStr(yesterday);
+
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  const weekStartStr = toStr(weekStart);
+  const todayStr = toStr(now);
+
+  const monthStr = todayStr.substring(0, 7); // YYYY-MM
+
+  const calc = (filter) => {
+    const filtered = entries.filter(filter);
+    const inc = filtered.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0);
+    const exp = filtered.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
+    return { inc, exp };
+  };
+
+  const yest  = calc(e => e.date === yestStr);
+  const week  = calc(e => e.date >= weekStartStr && e.date <= todayStr);
+  const month = calc(e => e.date.startsWith(monthStr));
+
+  const setCard = (prefix, data) => {
+    const max = Math.max(data.inc, data.exp, 1);
+    const net = data.inc - data.exp;
+    const fmtNum = n => n.toLocaleString('en-US') + ' ر.س';
+    document.getElementById(`cmp-${prefix}-inc`).textContent = fmtNum(data.inc);
+    document.getElementById(`cmp-${prefix}-exp`).textContent = fmtNum(data.exp);
+    document.getElementById(`cmp-${prefix}-inc-bar`).style.width = Math.round(data.inc / max * 100) + '%';
+    document.getElementById(`cmp-${prefix}-exp-bar`).style.width = Math.round(data.exp / max * 100) + '%';
+    const netEl = document.getElementById(`cmp-${prefix}-net`);
+    netEl.textContent = (net > 0 ? '+' : '') + fmtNum(net);
+    netEl.className = 'compare-net-val ' + (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero');
+  };
+
+  setCard('yest',  yest);
+  setCard('week',  week);
+  setCard('month', month);
+}
+
+// ---- TABS ----
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'chart') { buildComparison(); }
+  if (name === 'records') { updateFilterDates(); renderTable(); }
+}
+window.switchTab = switchTab;
+
+// ---- EDIT ----
+let editType = 'income';
+
+function openEdit(docId) {
+  const e = entries.find(x => x._docId === docId);
+  if (!e) return;
+  document.getElementById('editId').value = docId;
+  document.getElementById('editAmount').value = e.amount;
+  document.getElementById('editDate').value = e.date;
+  document.getElementById('editDesc').value = e.desc || '';
+  editType = e.type;
+  document.getElementById('edit-btn-income').classList.toggle('active', e.type === 'income');
+  document.getElementById('edit-btn-expense').classList.toggle('active', e.type === 'expense');
+  updateEditCats(e.cat);
+  document.getElementById('editModal').classList.add('open');
+}
+window.openEdit = openEdit;
+
+function setEditType(t) {
+  editType = t;
+  document.getElementById('edit-btn-income').classList.toggle('active', t === 'income');
+  document.getElementById('edit-btn-expense').classList.toggle('active', t === 'expense');
+  updateEditCats();
+}
+window.setEditType = setEditType;
+
+function updateEditCats(selected) {
+  const sel = document.getElementById('editCat');
+  sel.innerHTML = CATS[editType].map(c => `<option ${c === selected ? 'selected' : ''}>${c}</option>`).join('');
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('open');
+}
+window.closeEdit = closeEdit;
+
+async function saveEdit() {
+  const docId = document.getElementById('editId').value;
+  const amount = parseFloat(document.getElementById('editAmount').value);
+  const date = document.getElementById('editDate').value;
+  if (!amount || amount <= 0) { alert('يرجى إدخال مبلغ صحيح'); return; }
+  if (!date) { alert('يرجى اختيار التاريخ'); return; }
+  await updateDoc(doc(db, 'entries', docId), {
+    type: editType,
+    amount,
+    cat: document.getElementById('editCat').value,
+    desc: document.getElementById('editDesc').value.trim(),
+    date
+  });
+  closeEdit();
+}
+window.saveEdit = saveEdit;
+
+// ---- UTILS ----
+function fmt(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 0 }) + ' <img src="img/ar.png" style="height:0.85em;vertical-align:middle;filter:invert(1)">'; }
+
+init();
+</script>
+</body>
+</html>
