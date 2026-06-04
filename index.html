@@ -353,6 +353,24 @@
     height: 1px;
     background: var(--border);
   }
+  .entry-card-descs {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 2px;
+  }
+  .entry-card-desc-item {
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .entry-card-desc-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
 
   /* ---- MODAL ---- */
   .modal-overlay {
@@ -949,6 +967,8 @@ function renderTable() {
         const expense = dayEntries.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
         const net = income - expense;
         const docIds = dayEntries.map(e => e._docId);
+        const incDescs = dayEntries.filter(e => e.type === 'income' && e.desc).map(e => e.desc);
+        const expDescs = dayEntries.filter(e => e.type === 'expense' && e.desc).map(e => e.desc);
         return `
           <div class="entry-card">
             <div class="entry-card-header">
@@ -963,10 +983,12 @@ function renderTable() {
                 <span class="entry-card-row-label">الدخل</span>
                 <span class="entry-card-row-val amount-pos">+${income.toLocaleString('en-US')}</span>
               </div>
+              ${incDescs.length ? `<div class="entry-card-descs">${incDescs.map(d => `<div class="entry-card-desc-item"><div class="entry-card-desc-dot" style="background:var(--green)"></div>${d}</div>`).join('')}</div>` : ''}
               <div class="entry-card-row">
                 <span class="entry-card-row-label">المصروفات</span>
                 <span class="entry-card-row-val amount-neg">-${expense.toLocaleString('en-US')}</span>
               </div>
+              ${expDescs.length ? `<div class="entry-card-descs">${expDescs.map(d => `<div class="entry-card-desc-item"><div class="entry-card-desc-dot" style="background:var(--red)"></div>${d}</div>`).join('')}</div>` : ''}
               <div class="entry-card-divider"></div>
               <div class="entry-card-row">
                 <span class="entry-card-row-label">صافي</span>
