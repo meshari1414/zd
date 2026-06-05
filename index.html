@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>تموينات — إدارة مالية</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
 
@@ -471,6 +472,21 @@
   }
   .ct-btn.active { background: linear-gradient(135deg, var(--accent), #7c3aed); color: #fff; border-color: transparent; }
 
+  .export-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--green);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+  }
+  .export-btn:hover { background: #00e67612; border-color: var(--green); }
+
   .chart-wrap { height: 280px; position: relative; }
 
   .donut-wrap {
@@ -757,8 +773,19 @@
   <div class="panel" id="panel-chart">
     <div class="chart-section">
 
+      <!-- Export Button -->
+      <div style="display:flex; justify-content:flex-start; margin-bottom:0.5rem;">
+        <button class="export-btn" onclick="exportToExcel()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/>
+          </svg>
+          تصدير إلى Excel
+        </button>
+      </div>
+
       <!-- Smart Insight -->
-      <div class="insight-bar neutral" id="insightBar">
+      <div class="insight-bar neutral" id="insightBar" style="display:none">
         <span class="insight-text" id="insightText">جارٍ تحليل البيانات...</span>
       </div>
 
@@ -963,6 +990,111 @@ function showToast() {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 window.addEntry = addEntry;
+
+// ---- EXPORT TO EXCEL ----
+window.exportToExcel = async function() {
+  if (!entries.length) { alert('لا توجد بيانات للتصدير'); return; }
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('السجل المالي', { views: [{ rightToLeft: true }] });
+
+  const border = (style = 'thin') => ({
+    top:    { style, color: { argb: 'FFD1D5DB' } },
+    left:   { style, color: { argb: 'FFD1D5DB' } },
+    bottom: { style, color: { argb: 'FFD1D5DB' } },
+    right:  { style, color: { argb: 'FFD1D5DB' } },
+  });
+
+  ws.columns = [
+    { key: 'date',   width: 14 },
+    { key: 'type',   width: 10 },
+    { key: 'cat',    width: 16 },
+    { key: 'desc',   width: 26 },
+    { key: 'amount', width: 14 },
+  ];
+
+  ws.addRow([]);
+
+  // --- رؤوس الأعمدة ---
+  const hRow = ws.addRow(['التاريخ', 'النوع', 'التصنيف', 'الوصف', 'المبلغ (ر.س)']);
+  hRow.height = 24;
+  hRow.eachCell(cell => {
+    cell.font      = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF111827' } };
+    cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', readingOrder: 'rightToLeft' };
+    cell.border    = border('medium');
+  });
+
+  // --- البيانات ---
+  const sorted = entries.slice().sort((a, b) => a.date.localeCompare(b.date));
+  sorted.forEach(e => {
+    const isIncome = e.type === 'income';
+    const row = ws.addRow([
+      e.date,
+      isIncome ? 'دخل' : 'مصروف',
+      e.cat  || '—',
+      e.desc || '—',
+      e.amount,
+    ]);
+    row.height = 20;
+    row.eachCell((cell, col) => {
+      cell.font      = { name: 'Arial', size: 10, color: { argb: 'FF111827' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', readingOrder: 'rightToLeft' };
+      cell.border    = border();
+      if (col === 5) {
+        cell.numFmt = '#,##0.00';
+        cell.font   = { name: 'Arial', size: 10, bold: true,
+          color: { argb: isIncome ? 'FF16A34A' : 'FFDC2626' } };
+      }
+      if (col === 2) {
+        cell.font = { name: 'Arial', size: 10,
+          color: { argb: isIncome ? 'FF16A34A' : 'FFDC2626' } };
+      }
+    });
+  });
+
+  // --- فاصل ---
+  ws.addRow([]);
+
+  // --- ملخص ---
+  const income  = entries.filter(e => e.type === 'income').reduce((s,e)  => s + e.amount, 0);
+  const expense = entries.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
+  const profit  = income - expense;
+
+  [
+    { label: 'إجمالي الدخل',     value: income,  color: 'FF16A34A' },
+    { label: 'إجمالي المصروفات', value: expense, color: 'FFDC2626' },
+    { label: 'صافي الربح / الخسارة', value: profit, color: profit >= 0 ? 'FF16A34A' : 'FFDC2626' },
+  ].forEach(s => {
+    const rn = ws.rowCount + 1;
+    ws.mergeCells(`A${rn}:D${rn}`);
+    const lbl = ws.getCell(`A${rn}`);
+    lbl.value     = s.label;
+    lbl.font      = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF111827' } };
+    lbl.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
+    lbl.alignment = { horizontal: 'right', vertical: 'middle', indent: 1, readingOrder: 'rightToLeft' };
+    lbl.border    = border();
+
+    const val = ws.getCell(`E${rn}`);
+    val.value     = s.value;
+    val.numFmt    = '#,##0.00';
+    val.font      = { name: 'Arial', size: 10, bold: true, color: { argb: s.color } };
+    val.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
+    val.alignment = { horizontal: 'center', vertical: 'middle' };
+    val.border    = border();
+    ws.getRow(rn).height = 22;
+  });
+
+  // --- تحميل ---
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url    = URL.createObjectURL(blob);
+  const a      = document.createElement('a');
+  a.href       = url;
+  a.download   = `تموينات_${new Date().toISOString().slice(0,10)}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
 // ---- SUMMARY ----
 function updateSummary() {
@@ -1197,18 +1329,16 @@ function updateInsight() {
   const bar  = document.getElementById('insightBar');
   const text = document.getElementById('insightText');
 
-  if (!entries.length) {
-    bar.className = 'insight-bar neutral';
-    text.innerHTML = 'لا توجد بيانات بعد — ابدأ بتسجيل أول حركة مالية!';
+  if (!entries.length || (todayExp === 0 && todayInc === 0)) {
+    bar.style.display = 'none';
     return;
   }
 
+  bar.style.display = '';
+
   let icon, cls, msg;
 
-  if (todayExp === 0 && todayInc === 0) {
-    icon = '📋'; cls = 'neutral';
-    msg = 'لم تُسجَّل أي حركة مالية اليوم بعد.';
-  } else if (yesterExp === 0 && todayExp > 0) {
+  if (yesterExp === 0 && todayExp > 0) {
     icon = '📊'; cls = 'neutral';
     msg = `أنفقت اليوم <strong><span class="bad-val">${todayExp.toLocaleString('en-US')} ر.س</span></strong> — لا توجد بيانات أمس للمقارنة.`;
   } else if (todayExp > yesterExp) {
