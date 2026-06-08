@@ -10,17 +10,19 @@
   @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
 
   :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --card: #1a2235;
-    --border: #1e2d45;
-    --accent: #00d4ff;
-    --green: #00e676;
-    --red: #ff4d6d;
-    --yellow: #ffd60a;
-    --text: #ffffff;
-    --muted: #6b7fa3;
-    --grad1: linear-gradient(135deg, #00d4ff22, #7c3aed22);
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --border: #dde3ed;
+    --accent: #3b82f6;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #1e293b;
+    --muted: #64748b;
+    --grad1: linear-gradient(135deg, #3b82f622, #6366f122);
+    --shadow: 0 2px 12px rgba(30,41,59,0.08);
+    --shadow-hover: 0 8px 28px rgba(30,41,59,0.13);
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -35,7 +37,7 @@
 
   /* ---- HEADER ---- */
   header {
-    background: linear-gradient(90deg, #0a0e1a, #111827);
+    background: rgba(255,255,255,0.92);
     border-bottom: 1px solid var(--border);
     padding: 0 2rem;
     height: 64px;
@@ -45,7 +47,8 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 1px 8px rgba(30,41,59,0.07);
   }
 
   .logo {
@@ -60,14 +63,14 @@
     display: flex; align-items: center; justify-content: center;
   }
   .logo-icon img {
-    width: 34px; height: 34px;
+    width: 120px; height: 120px;
     object-fit: contain;
-    filter: drop-shadow(0 0 6px #00d4ff55);
+    filter: drop-shadow(0 0 5px #3b82f640);
   }
   .logo span { color: var(--accent); }
 
   .today-badge {
-    background: var(--card);
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 6px 16px;
@@ -83,18 +86,19 @@
     display: flex;
     gap: 8px;
     margin-bottom: 2rem;
-    background: var(--surface);
+    background: var(--card);
     border-radius: 14px;
     padding: 6px;
     border: 1px solid var(--border);
     width: fit-content;
+    box-shadow: var(--shadow);
   }
   .tab {
     padding: 10px 24px;
     border-radius: 10px;
     border: none;
     background: transparent;
-    color: #ffffff;
+    color: var(--muted);
     font-family: 'Tajawal', sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
@@ -102,9 +106,9 @@
     transition: all .25s;
   }
   .tab.active {
-    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    background: linear-gradient(135deg, var(--accent), #6366f1);
     color: #fff;
-    box-shadow: 0 4px 15px #00d4ff33;
+    box-shadow: 0 4px 15px #3b82f630;
   }
 
   /* ---- SUMMARY CARDS ---- */
@@ -122,20 +126,21 @@
     padding: 1.5rem;
     position: relative;
     overflow: hidden;
-    transition: transform .2s;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: var(--shadow);
   }
-  .sum-card:hover { transform: translateY(-3px); }
+  .sum-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
   .sum-card::before {
     content:'';
     position:absolute; top:0; left:0; right:0; height:3px;
   }
-  .sum-card.income::before { background: linear-gradient(90deg, var(--green), #00b248); }
-  .sum-card.expense::before { background: linear-gradient(90deg, var(--red), #c9184a); }
-  .sum-card.profit::before { background: linear-gradient(90deg, var(--accent), #7c3aed); }
+  .sum-card.income::before { background: linear-gradient(90deg, var(--green), #059669); }
+  .sum-card.expense::before { background: linear-gradient(90deg, var(--red), #dc2626); }
+  .sum-card.profit::before { background: linear-gradient(90deg, var(--accent), #6366f1); }
 
   .sum-label {
     font-size: 0.85rem;
-    color: #ffffff;
+    color: var(--muted);
     margin-bottom: 0.5rem;
     display: flex; align-items: center; gap: 6px;
   }
@@ -144,9 +149,9 @@
     font-weight: 900;
     letter-spacing: -1px;
   }
-  .sum-card.income .sum-amount { color: #ffffff; }
-  .sum-card.expense .sum-amount { color: #ffffff; }
-  .sum-card.profit .sum-amount { color: #ffffff; }
+  .sum-card.income .sum-amount { color: var(--green); }
+  .sum-card.expense .sum-amount { color: var(--red); }
+  .sum-card.profit .sum-amount { color: var(--accent); }
   .sum-sub {
     font-size: 0.78rem;
     color: var(--muted);
@@ -165,6 +170,7 @@
     border-radius: 20px;
     padding: 2rem;
     margin-bottom: 2rem;
+    box-shadow: var(--shadow);
   }
   .form-title {
     font-size: 1.1rem;
@@ -179,9 +185,9 @@
     margin-bottom: 1rem;
   }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group label { font-size: 0.82rem; color: #ffffff; font-weight: 600; }
+  .form-group label { font-size: 0.82rem; color: var(--text); font-weight: 600; }
   .form-group input, .form-group select {
-    background: var(--surface);
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 11px 14px;
@@ -189,14 +195,15 @@
     font-family: 'Tajawal', sans-serif;
     font-size: 0.95rem;
     outline: none;
-    transition: border-color .2s;
+    transition: border-color .2s, box-shadow .2s;
     width: 100%;
   }
   .form-group input:focus, .form-group select:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px #00d4ff15;
+    box-shadow: 0 0 0 3px #3b82f618;
+    background: #fff;
   }
-  .form-group select option { background: var(--surface); }
+  .form-group select option { background: #fff; color: var(--text); }
   .type-toggle {
     display: flex; gap: 8px;
   }
@@ -204,7 +211,7 @@
     flex: 1; padding: 11px;
     border: 1px solid var(--border);
     border-radius: 10px;
-    background: var(--surface);
+    background: var(--bg);
     color: var(--muted);
     font-family: 'Tajawal', sans-serif;
     font-size: 0.95rem;
@@ -212,11 +219,11 @@
     cursor: pointer;
     transition: all .2s;
   }
-  .type-btn.income.active { background: #00e67618; border-color: var(--green); color: var(--green); }
-  .type-btn.expense.active { background: #ff4d6d18; border-color: var(--red); color: var(--red); }
+  .type-btn.income.active { background: #10b98115; border-color: var(--green); color: var(--green); }
+  .type-btn.expense.active { background: #ef444415; border-color: var(--red); color: var(--red); }
 
   .add-btn {
-    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    background: linear-gradient(135deg, var(--accent), #6366f1);
     border: none;
     border-radius: 12px;
     padding: 13px 32px;
@@ -225,12 +232,12 @@
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
-    transition: opacity .2s, transform .2s;
-    box-shadow: 0 4px 20px #00d4ff30;
+    transition: opacity .2s, transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 20px #3b82f635;
     width: 100%;
     margin-top: 0.5rem;
   }
-  .add-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .add-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 24px #3b82f645; }
 
   /* ---- TABLE ---- */
   .table-card {
@@ -238,6 +245,7 @@
     border: 1px solid var(--border);
     border-radius: 20px;
     overflow: hidden;
+    box-shadow: var(--shadow);
   }
   .table-header {
     padding: 1.2rem 1.5rem;
@@ -248,7 +256,7 @@
   }
   .table-title { font-size: 1rem; font-weight: 700; }
   .filter-select {
-    background: var(--surface);
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 7px 12px;
@@ -259,7 +267,7 @@
   }
   table { width: 100%; border-collapse: collapse; }
   th {
-    background: var(--surface);
+    background: var(--bg);
     padding: 12px 16px;
     font-size: 0.82rem;
     color: var(--muted);
@@ -269,10 +277,10 @@
   td {
     padding: 13px 16px;
     font-size: 0.92rem;
-    border-bottom: 1px solid #1e2d4540;
+    border-bottom: 1px solid var(--border);
   }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #ffffff05; }
+  tr:hover td { background: #f8faff; }
 
   .badge {
     display: inline-flex; align-items: center; gap: 4px;
@@ -305,25 +313,26 @@
     padding: 1.2rem 1.5rem;
   }
   .entry-card {
-    background: var(--surface);
+    background: var(--card);
     border: 1px solid var(--border);
     border-radius: 16px;
     overflow: hidden;
     transition: transform .2s, box-shadow .2s;
+    box-shadow: var(--shadow);
   }
-  .entry-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px #00000030; }
+  .entry-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
   .entry-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0.6rem 0.9rem;
     border-bottom: 1px solid var(--border);
-    background: var(--card);
+    background: var(--bg);
   }
   .entry-card-date {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--text);
   }
   .entry-card-actions { display: flex; gap: 2px; }
   .entry-card-actions .edit-btn,
@@ -344,7 +353,7 @@
   }
   .entry-card-row-label {
     font-size: 0.78rem;
-    color: #ffffff;
+    color: var(--muted);
   }
   .entry-card-row-val {
     font-size: 0.92rem;
@@ -353,6 +362,11 @@
   .entry-card-divider {
     height: 1px;
     background: var(--border);
+  }
+  .entry-card-sep {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 2px 0;
   }
   .entry-card-descs {
     display: flex;
@@ -377,8 +391,8 @@
   .modal-overlay {
     display: none;
     position: fixed; inset: 0;
-    background: #00000080;
-    backdrop-filter: blur(4px);
+    background: rgba(30,41,59,0.35);
+    backdrop-filter: blur(6px);
     z-index: 200;
     align-items: center;
     justify-content: center;
@@ -391,20 +405,21 @@
     padding: 2rem;
     width: 90%;
     max-width: 480px;
-    box-shadow: 0 20px 60px #00000060;
+    box-shadow: 0 20px 60px rgba(30,41,59,0.18);
   }
   .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
   .modal-actions { display: flex; gap: 10px; margin-top: 1.2rem; }
   .modal-save {
     flex: 1;
-    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    background: linear-gradient(135deg, var(--accent), #6366f1);
     border: none; border-radius: 10px; padding: 11px;
     color: #fff; font-family: 'Tajawal', sans-serif;
     font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 3px 12px #3b82f630;
   }
   .modal-cancel {
     flex: 1;
-    background: var(--surface); border: 1px solid var(--border);
+    background: var(--bg); border: 1px solid var(--border);
     border-radius: 10px; padding: 11px;
     color: var(--muted); font-family: 'Tajawal', sans-serif;
     font-size: 0.95rem; font-weight: 700; cursor: pointer;
@@ -434,22 +449,24 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    transition: transform .2s;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: var(--shadow);
   }
-  .kpi-box:hover { transform: translateY(-2px); }
+  .kpi-box:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
   .kpi-icon { display: none; }
   .kpi-info { flex: 1; min-width: 0; }
   .kpi-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 3px; }
   .kpi-val { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .kpi-box.kpi-income .kpi-val { color: #ffffff; }
-  .kpi-box.kpi-expense .kpi-val { color: #ffffff; }
-  .kpi-box.kpi-profit .kpi-val { color: #ffffff; }
+  .kpi-box.kpi-income .kpi-val { color: var(--green); }
+  .kpi-box.kpi-expense .kpi-val { color: var(--red); }
+  .kpi-box.kpi-profit .kpi-val { color: var(--accent); }
 
   .chart-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 1.5rem;
+    box-shadow: var(--shadow);
   }
   .chart-header {
     display: flex;
@@ -463,14 +480,14 @@
     padding: 5px 14px;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: var(--surface);
+    background: var(--bg);
     color: var(--muted);
     font-family: 'Tajawal', sans-serif;
     font-size: 0.8rem;
     cursor: pointer;
     transition: all .2s;
   }
-  .ct-btn.active { background: linear-gradient(135deg, var(--accent), #7c3aed); color: #fff; border-color: transparent; }
+  .ct-btn.active { background: linear-gradient(135deg, var(--accent), #6366f1); color: #fff; border-color: transparent; }
 
   .export-btn {
     display: flex; align-items: center; gap: 8px;
@@ -515,12 +532,13 @@
     padding: 1.4rem;
     position: relative;
     overflow: hidden;
-    transition: transform .2s;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: var(--shadow);
   }
-  .compare-card:hover { transform: translateY(-3px); }
+  .compare-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
   .compare-period {
     font-size: 0.82rem;
-    color: #ffffff;
+    color: var(--text);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -553,7 +571,7 @@
     align-items: center;
     font-size: 0.82rem;
   }
-  .compare-item-label { color: #ffffff; }
+  .compare-item-label { color: var(--muted); }
   .compare-item-val { font-weight: 800; font-size: 0.9rem; }
   .compare-item-val.inc { color: var(--green); }
   .compare-item-val.exp { color: var(--red); }
@@ -582,7 +600,7 @@
     align-items: center;
     font-size: 0.88rem;
   }
-  .compare-net-label { color: #ffffff; }
+  .compare-net-label { color: var(--muted); }
   .compare-net-val { font-weight: 900; font-size: 1rem; }
   .compare-net-val.pos { color: var(--green); }
   .compare-net-val.neg { color: var(--red); }
@@ -606,9 +624,9 @@
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .insight-bar.good  { border-color: #00e67640; }
-  .insight-bar.warn  { border-color: #ffd60a40; }
-  .insight-bar.bad   { border-color: #ff4d6d40; }
+  .insight-bar.good  { border-color: #10b98140; background: #f0fdf4; }
+  .insight-bar.warn  { border-color: #f59e0b40; background: #fffbeb; }
+  .insight-bar.bad   { border-color: #ef444440; background: #fef2f2; }
   .insight-bar.neutral { border-color: var(--border); }
   .insight-icon {
     font-size: 1.3rem;
@@ -616,7 +634,7 @@
   }
   .insight-text {
     font-size: 0.88rem;
-    color: #ffffff;
+    color: var(--text);
     line-height: 1.5;
   }
   .insight-text strong { font-weight: 900; }
@@ -630,14 +648,14 @@
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--card);
-    border: 1px solid #00e67640;
+    background: #fff;
+    border: 1px solid #10b98140;
     border-radius: 12px;
     padding: 0.75rem 1.5rem;
     font-size: 0.92rem;
     font-weight: 700;
     color: var(--green);
-    box-shadow: 0 8px 30px #00000040;
+    box-shadow: 0 8px 30px rgba(30,41,59,0.15);
     opacity: 0;
     pointer-events: none;
     transition: opacity .3s, transform .3s;
@@ -685,7 +703,7 @@
 
 <header>
   <div class="logo">
-    <div class="logo-icon"><img src="img/zd.png" alt="ZD" id="logoImg"/></div>
+    <div class="logo-icon"><img src="img/z.png" alt="ZD" id="logoImg"/></div>
   </div>
   <div class="today-badge" id="todayDate"></div>
 </header>
@@ -1150,6 +1168,7 @@ function renderTable() {
                 <span class="entry-card-row-val amount-pos">+${income.toLocaleString('en-US')}</span>
               </div>
               ${incDescs.length ? `<div class="entry-card-descs">${incDescs.map(d => `<div class="entry-card-desc-item"><div class="entry-card-desc-dot" style="background:var(--green)"></div>${d}</div>`).join('')}</div>` : ''}
+              <div class="entry-card-sep"></div>
               <div class="entry-card-row">
                 <span class="entry-card-row-label">المصروفات</span>
                 <span class="entry-card-row-val amount-neg">-${expense.toLocaleString('en-US')}</span>
